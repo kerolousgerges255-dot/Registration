@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>تسجيل معهد في اتشوب - معهد الكتاب المقدس</title>
+<title>تسجيل عباقرة في اتشوب - معهد الكتاب المقدس</title>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
 :root{--brown:#6B2412;--orange:#C0622A;--cream:#FBF5EE;--line:#E4D3C2;--ok:#1E7B45;--err:#B3261E}
@@ -52,14 +52,6 @@ button:disabled{opacity:.6}
   <div id="pinMsg" style="color:var(--err);margin-top:10px;font-size:.9rem"></div>
  </div>
 </div>
-<div id="u18" style="display:none;position:fixed;inset:0;background:rgba(43,26,20,.55);z-index:20;align-items:center;justify-content:center;padding:20px">
- <div style="background:#fff;border-radius:14px;padding:22px;max-width:360px;width:100%;text-align:center">
-  <h2 style="margin:0 0 8px;color:var(--err)">⚠️ تنبيه: أقل من 18 سنة</h2>
-  <p id="u18txt" style="margin:0 0 14px"></p>
-  <button type="button" id="u18go" style="margin-top:0">كمّل التسجيل</button>
-  <button type="button" id="u18back" style="margin-top:8px;background:#fff;color:var(--brown);border:2px solid var(--brown)">رجوع للمراجعة</button>
- </div>
-</div>
 <main>
 <form id="f" novalidate autocomplete="off">
  <div class="grid">
@@ -99,6 +91,7 @@ button:disabled{opacity:.6}
  <div id="toast"></div>
  <div id="queue"></div>
  <div style="text-align:center;margin-top:8px"><a href="#" id="logout" style="font-size:.8rem;color:#7a665b">تسجيل خروج</a></div>
+ <div style="text-align:center;margin-top:6px;font-size:.7rem;color:#b9a99c">نسخة 6</div>
 </form>
 </main>
 <script>
@@ -187,7 +180,7 @@ $('logout').addEventListener('click',e=>{e.preventDefault();localStorage.removeI
 if(!localStorage.getItem(PIN_KEY))showLogin();else flush();
 window.addEventListener('online',flush); showQ();
 
-async function submitForm(e,skip){
+async function submitForm(e){
  e.preventDefault();
  if(!localStorage.getItem(PIN_KEY)){showLogin();return}
  if(!validate()){toast('err','راجع الخانات المعلّمة بالأحمر');return}
@@ -196,23 +189,21 @@ async function submitForm(e,skip){
   confessor:$('confessor').value.trim(),education:$('education').value,service:$('service').value.trim(),
   email:$('email').value.trim(),paid:'YES',notes:$('notes').value.trim()};
  const under=+$('age').value<18; rec.confirmU18=under;
- if(under&&!skip){$('u18txt').textContent='السن المحسوب من الرقم القومي: '+$('age').value+' سنة (أقل من 18). راجع مع المسجل.';$('u18').style.display='flex';return}
+ const warn=under?(' ⚠️ تنبيه: السن '+$('age').value+' سنة (أقل من 18) — اتسجل، راجع مع المسجل'):'';
  const btn=$('btn');btn.disabled=true;toast('wait','جاري التسجيل...');
  try{
   const res=await send(rec);
-  if(res.ok){toast('ok','تم التسجيل بنجاح ✔ — المدفوعين: '+res.count+' | الإجمالي: '+res.total+' جنيه');$('f').reset();$('diocese').value='الشرقية ومدينة العاشر';$('h_age').textContent=''}
+  if(res.ok){toast('ok','تم التسجيل بنجاح ✔ — المدفوعين: '+res.count+' | الإجمالي: '+res.total+' جنيه'+warn);$('f').reset();$('diocese').value='الشرقية ومدينة العاشر';$('h_age').textContent=''}
   else if(res.auth){localStorage.removeItem(PIN_KEY);showLogin()}
   else toast('err',res.msg||'حصلت مشكلة، حاول تاني');
  }catch(err){
   const q=getQ();q.push(rec);setQ(q);
-  toast('wait','مفيش اتصال بالنت - التسجيل اتحفظ على الجهاز وهيتبعت لوحده لما النت يرجع');
+  toast('wait','مفيش اتصال بالنت - التسجيل اتحفظ على الجهاز وهيتبعت لوحده لما النت يرجع'+warn);
   $('f').reset();$('diocese').value='الشرقية ومدينة العاشر';$('h_age').textContent='';
  }
  btn.disabled=false;
 }
-$('f').addEventListener('submit',e=>submitForm(e,false));
-$('u18go').addEventListener('click',()=>{$('u18').style.display='none';submitForm({preventDefault(){}},true)});
-$('u18back').addEventListener('click',()=>{$('u18').style.display='none'});
+$('f').addEventListener('submit',e=>submitForm(e));
 </script>
 </body>
 </html>
