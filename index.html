@@ -47,6 +47,7 @@ button:disabled{opacity:.6}
 <div id="login" style="display:none;position:fixed;inset:0;background:var(--cream);z-index:10;align-items:center;justify-content:center;padding:20px">
  <div style="background:#fff;border:1px solid var(--line);border-radius:14px;padding:22px;max-width:340px;width:100%;text-align:center">
   <h2 style="margin:0 0 10px;color:var(--brown)">دخول المسجلين</h2>
+  <input id="uname" placeholder="اسمك (اسم الخادم)" style="text-align:center;margin-bottom:10px">
   <input id="pin" type="password" placeholder="كلمة السر" style="text-align:center;margin-bottom:10px">
   <button id="pinBtn" type="button" style="margin-top:0">دخول</button>
   <div id="pinMsg" style="color:var(--err);margin-top:10px;font-size:.9rem"></div>
@@ -91,12 +92,13 @@ button:disabled{opacity:.6}
  <div id="toast"></div>
  <div id="queue"></div>
  <div style="text-align:center;margin-top:8px"><a href="#" id="logout" style="font-size:.8rem;color:#7a665b">تسجيل خروج</a></div>
- <div style="text-align:center;margin-top:6px;font-size:.7rem;color:#b9a99c">نسخة 7</div>
+ <div id="who" style="text-align:center;margin-top:8px;font-size:.85rem;color:var(--brown);font-weight:600"></div>
+ <div style="text-align:center;margin-top:6px;font-size:.7rem;color:#b9a99c">نسخة 8</div>
 </form>
 </main>
 <script>
 const URL_ENDPOINT='https://script.google.com/macros/s/AKfycbz-mOeROBO8usYjO8zwq667AE5iMyV9abkPBbbGw6ydkNEJLU0HUMUOO4yOzxbXZMc3PA/exec';
-const PIN_KEY='regPin';
+const PIN_KEY='regPin',NAME_KEY='regName';
 const $=id=>document.getElementById(id);
 const toEn=s=>String(s||'').replace(/[٠-٩]/g,d=>'٠١٢٣٤٥٦٧٨٩'.indexOf(d)).replace(/[۰-۹]/g,d=>'۰۱۲۳۴۵۶۷۸۹'.indexOf(d));
 ['nid','phone','age'].forEach(id=>$(id).addEventListener('input',e=>{e.target.value=toEn(e.target.value).replace(/\D/g,'')}));
@@ -148,7 +150,7 @@ function setQ(q){localStorage.setItem('pendingReg',JSON.stringify(q));showQ()}
 function showQ(){const n=getQ().length;$('queue').textContent=n?('تسجيلات محفوظة على الجهاز ولسه متبعتتش: '+n):''}
 
 async function send(rec){
- rec=Object.assign({},rec,{secret:localStorage.getItem(PIN_KEY)||''});
+ rec=Object.assign({},rec,{secret:localStorage.getItem(PIN_KEY)||'',by:localStorage.getItem(NAME_KEY)||''});
  const r=await fetch(URL_ENDPOINT,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(rec)});
  return await r.json();
 }
@@ -163,25 +165,29 @@ async function flush(){
 }
 function showLogin(){$('login').style.display='flex'}
 async function doLogin(){
- const p=toEn($('pin').value.trim());if(!p)return;
+ const p=toEn($('pin').value.trim()),nm=$('uname').value.trim().replace(/\s+/g,' ');
+ if(nm.length<2){$('pinMsg').textContent='اكتب اسمك';return}
+ if(!p)return;
  $('pinMsg').textContent='';$('pinBtn').disabled=true;
  try{
-  const r=await fetch(URL_ENDPOINT,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:'check',secret:p})});
+  const r=await fetch(URL_ENDPOINT,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:'check',secret:p,by:nm})});
   const res=await r.json();
-  if(res.ok){localStorage.setItem(PIN_KEY,p);$('login').style.display='none';$('pin').value='';flush()}
+  if(res.ok){localStorage.setItem(PIN_KEY,p);localStorage.setItem(NAME_KEY,nm);$('login').style.display='none';$('pin').value='';showWho();flush()}
   else $('pinMsg').textContent=res.msg||'كلمة السر غلط';
  }catch(e){$('pinMsg').textContent='مفيش اتصال بالنت'}
  $('pinBtn').disabled=false;
 }
 $('pinBtn').addEventListener('click',doLogin);
 $('pin').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin()});
-$('logout').addEventListener('click',e=>{e.preventDefault();localStorage.removeItem(PIN_KEY);showLogin()});
-if(!localStorage.getItem(PIN_KEY))showLogin();else flush();
+$('logout').addEventListener('click',e=>{e.preventDefault();localStorage.removeItem(PIN_KEY);localStorage.removeItem(NAME_KEY);$('uname').value='';showWho();showLogin()});
+function showWho(){const n=localStorage.getItem(NAME_KEY);$('who').textContent=n?('المسجل: '+n):''}
+showWho();
+if(!localStorage.getItem(PIN_KEY)||!localStorage.getItem(NAME_KEY))showLogin();else flush();
 window.addEventListener('online',flush); showQ();
 
 async function submitForm(e){
  e.preventDefault();
- if(!localStorage.getItem(PIN_KEY)){showLogin();return}
+ if(!localStorage.getItem(PIN_KEY)||!localStorage.getItem(NAME_KEY)){showLogin();return}
  if(!validate()){toast('err','راجع الخانات المعلّمة بالأحمر');return}
  const rec={name:$('name').value.trim(),age:$('age').value,address:$('address').value.trim(),
   phone:$('phone').value,nid:$('nid').value,marital:$('marital').value,church:$('church').value,
