@@ -52,6 +52,14 @@ button:disabled{opacity:.6}
   <div id="pinMsg" style="color:var(--err);margin-top:10px;font-size:.9rem"></div>
  </div>
 </div>
+<div id="u18" style="display:none;position:fixed;inset:0;background:rgba(43,26,20,.55);z-index:20;align-items:center;justify-content:center;padding:20px">
+ <div style="background:#fff;border-radius:14px;padding:22px;max-width:360px;width:100%;text-align:center">
+  <h2 style="margin:0 0 8px;color:var(--err)">⚠️ تنبيه: أقل من 18 سنة</h2>
+  <p id="u18txt" style="margin:0 0 14px"></p>
+  <button type="button" id="u18go" style="margin-top:0">كمّل التسجيل</button>
+  <button type="button" id="u18back" style="margin-top:8px;background:#fff;color:var(--brown);border:2px solid var(--brown)">رجوع للمراجعة</button>
+ </div>
+</div>
 <main>
 <form id="f" novalidate autocomplete="off">
  <div class="grid">
@@ -108,7 +116,8 @@ function nidInfo(v){
  if(m<1||m>12||dt.getFullYear()!==y||dt.getMonth()!==m-1||dt.getDate()!==d)return{ok:false,msg:'تاريخ الميلاد جوه الرقم القومي غير صحيح'};
  const n=new Date(); let age=n.getFullYear()-y;
  if(n.getMonth()<m-1||(n.getMonth()===m-1&&n.getDate()<d))age--;
- if(age<0||age>100)return{ok:false,msg:'الرقم القومي غير صحيح'};
+ if(age<0)return{ok:false,msg:'تاريخ الميلاد جوه الرقم القومي في المستقبل'};
+ if(age>100)return{ok:false,msg:'الرقم ده معناه ميلاد سنة '+y+' (سن '+age+'). راجع أول رقم: 2 للمواليد قبل 2000 و 3 للمواليد من 2000'};
  const birth=d+'/'+m+'/'+y;
  return{ok:true,age,birth,msg:'',under18:age<18};
 }
@@ -178,7 +187,7 @@ $('logout').addEventListener('click',e=>{e.preventDefault();localStorage.removeI
 if(!localStorage.getItem(PIN_KEY))showLogin();else flush();
 window.addEventListener('online',flush); showQ();
 
-$('f').addEventListener('submit',async e=>{
+async function submitForm(e,skip){
  e.preventDefault();
  if(!localStorage.getItem(PIN_KEY)){showLogin();return}
  if(!validate()){toast('err','راجع الخانات المعلّمة بالأحمر');return}
@@ -187,7 +196,7 @@ $('f').addEventListener('submit',async e=>{
   confessor:$('confessor').value.trim(),education:$('education').value,service:$('service').value.trim(),
   email:$('email').value.trim(),paid:'YES',notes:$('notes').value.trim()};
  const under=+$('age').value<18; rec.confirmU18=under;
- if(under&&!confirm('⚠️ السن المحسوب من الرقم القومي '+$('age').value+' سنة (أقل من 18).\nراجع مع المسجل — تكمّل التسجيل؟'))return;
+ if(under&&!skip){$('u18txt').textContent='السن المحسوب من الرقم القومي: '+$('age').value+' سنة (أقل من 18). راجع مع المسجل.';$('u18').style.display='flex';return}
  const btn=$('btn');btn.disabled=true;toast('wait','جاري التسجيل...');
  try{
   const res=await send(rec);
@@ -200,7 +209,10 @@ $('f').addEventListener('submit',async e=>{
   $('f').reset();$('diocese').value='الشرقية ومدينة العاشر';$('h_age').textContent='';
  }
  btn.disabled=false;
-});
+}
+$('f').addEventListener('submit',e=>submitForm(e,false));
+$('u18go').addEventListener('click',()=>{$('u18').style.display='none';submitForm({preventDefault(){}},true)});
+$('u18back').addEventListener('click',()=>{$('u18').style.display='none'});
 </script>
 </body>
 </html>
