@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>تسجيل عباقرة في اتشوب - معهد الكتاب المقدس</title>
+<title>تسجيل معهد في اتشوب - معهد الكتاب المقدس</title>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
 :root{--brown:#6B2412;--orange:#C0622A;--cream:#FBF5EE;--line:#E4D3C2;--ok:#1E7B45;--err:#B3261E}
@@ -91,7 +91,7 @@ button:disabled{opacity:.6}
  <div id="toast"></div>
  <div id="queue"></div>
  <div style="text-align:center;margin-top:8px"><a href="#" id="logout" style="font-size:.8rem;color:#7a665b">تسجيل خروج</a></div>
- <div style="text-align:center;margin-top:6px;font-size:.7rem;color:#b9a99c">نسخة 6</div>
+ <div style="text-align:center;margin-top:6px;font-size:.7rem;color:#b9a99c">نسخة 7</div>
 </form>
 </main>
 <script>
@@ -117,7 +117,7 @@ function nidInfo(v){
 function updateNid(){
  const v=$('nid').value,i=nidInfo(v);
  $('age').value=(i.age!==undefined)?i.age:'';
- $('h_age').textContent=i.birth?('تاريخ الميلاد: '+i.birth+(i.under18?' ⚠️ السن أقل من 18 سنة، راجع مع المسجل':'')):'';
+ $('h_age').textContent=i.birth?('تاريخ الميلاد: '+i.birth+(i.under18?' ⚠️ السن أقل من 18 سنة':'')):'';
  $('h_age').style.color=i.under18?'#B3261E':'';
  $('h_age').style.fontWeight=i.under18?'700':'';
  if(v.length===14){$('e_nid').textContent=i.msg;$('nid').classList.toggle('bad',!i.ok);$('e_nid').style.display=i.ok?'none':'block'}
@@ -188,17 +188,15 @@ async function submitForm(e){
   phone:$('phone').value,nid:$('nid').value,marital:$('marital').value,church:$('church').value,
   confessor:$('confessor').value.trim(),education:$('education').value,service:$('service').value.trim(),
   email:$('email').value.trim(),paid:'YES',notes:$('notes').value.trim()};
- const under=+$('age').value<18; rec.confirmU18=under;
- const warn=under?(' ⚠️ تنبيه: السن '+$('age').value+' سنة (أقل من 18) — اتسجل، راجع مع المسجل'):'';
  const btn=$('btn');btn.disabled=true;toast('wait','جاري التسجيل...');
  try{
   const res=await send(rec);
-  if(res.ok){toast('ok','تم التسجيل بنجاح ✔ — المدفوعين: '+res.count+' | الإجمالي: '+res.total+' جنيه'+warn);$('f').reset();$('diocese').value='الشرقية ومدينة العاشر';$('h_age').textContent=''}
+  if(res.ok){toast('ok','تم التسجيل بنجاح ✔ — المدفوعين: '+res.count+' | الإجمالي: '+res.total+' جنيه');$('f').reset();$('diocese').value='الشرقية ومدينة العاشر';$('h_age').textContent=''}
   else if(res.auth){localStorage.removeItem(PIN_KEY);showLogin()}
   else toast('err',res.msg||'حصلت مشكلة، حاول تاني');
  }catch(err){
   const q=getQ();q.push(rec);setQ(q);
-  toast('wait','مفيش اتصال بالنت - التسجيل اتحفظ على الجهاز وهيتبعت لوحده لما النت يرجع'+warn);
+  toast('wait','مفيش اتصال بالنت - التسجيل اتحفظ على الجهاز وهيتبعت لوحده لما النت يرجع');
   $('f').reset();$('diocese').value='الشرقية ومدينة العاشر';$('h_age').textContent='';
  }
  btn.disabled=false;
