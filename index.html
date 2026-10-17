@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>تسجيل عباقرة في اتشوب - معهد الكتاب المقدس</title>
+<title>تسجيل معهد في اتشوب - معهد الكتاب المقدس</title>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
 :root{--brown:#6B2412;--orange:#C0622A;--cream:#FBF5EE;--line:#E4D3C2;--ok:#1E7B45;--err:#B3261E}
@@ -57,8 +57,9 @@ button:disabled{opacity:.6}
  <div class="grid">
   <div class="full"><label>الاسم رباعي <span class="req">*</span></label><input id="name" required>
    <div class="msgerr" id="e_name">اكتب الاسم رباعي (4 أسماء على الأقل)</div></div>
-  <div><label>السن <span class="req">*</span></label><input id="age" inputmode="numeric" required>
-   <div class="msgerr" id="e_age">السن رقم بين 5 و 100</div></div>
+  <div><label>السن (تلقائي من الرقم القومي)</label><input id="age" readonly placeholder="يظهر بعد كتابة الرقم القومي">
+   <div class="hint" id="h_age"></div>
+   </div>
   <div><label>الحالة الاجتماعية <span class="req">*</span></label>
    <select id="marital" required><option value="">اختار...</option><option>أعزب</option><option>متزوج</option></select>
    <div class="msgerr" id="e_marital">اختار الحالة الاجتماعية</div></div>
@@ -99,16 +100,38 @@ const $=id=>document.getElementById(id);
 const toEn=s=>String(s||'').replace(/[٠-٩]/g,d=>'٠١٢٣٤٥٦٧٨٩'.indexOf(d)).replace(/[۰-۹]/g,d=>'۰۱۲۳۴۵۶۷۸۹'.indexOf(d));
 ['nid','phone','age'].forEach(id=>$(id).addEventListener('input',e=>{e.target.value=toEn(e.target.value).replace(/\D/g,'')}));
 
+function nidInfo(v){
+ if(!/^\d{14}$/.test(v))return{ok:false,msg:'الرقم القومي لازم 14 رقم بالظبط'};
+ const c=v[0]; if(c!=='2'&&c!=='3')return{ok:false,msg:'الرقم القومي غير صحيح'};
+ const y=(c==='2'?1900:2000)+ +v.slice(1,3), m=+v.slice(3,5), d=+v.slice(5,7);
+ const dt=new Date(y,m-1,d);
+ if(m<1||m>12||dt.getFullYear()!==y||dt.getMonth()!==m-1||dt.getDate()!==d)return{ok:false,msg:'تاريخ الميلاد جوه الرقم القومي غير صحيح'};
+ const n=new Date(); let age=n.getFullYear()-y;
+ if(n.getMonth()<m-1||(n.getMonth()===m-1&&n.getDate()<d))age--;
+ if(age<0||age>100)return{ok:false,msg:'الرقم القومي غير صحيح'};
+ const birth=d+'/'+m+'/'+y;
+ return{ok:true,age,birth,msg:'',under18:age<18};
+}
+function updateNid(){
+ const v=$('nid').value,i=nidInfo(v);
+ $('age').value=(i.age!==undefined)?i.age:'';
+ $('h_age').textContent=i.birth?('تاريخ الميلاد: '+i.birth+(i.under18?' ⚠️ السن أقل من 18 سنة، راجع مع المسجل':'')):'';
+ $('h_age').style.color=i.under18?'#B3261E':'';
+ $('h_age').style.fontWeight=i.under18?'700':'';
+ if(v.length===14){$('e_nid').textContent=i.msg;$('nid').classList.toggle('bad',!i.ok);$('e_nid').style.display=i.ok?'none':'block'}
+}
+$('nid').addEventListener('input',updateNid);
 const rules={
  name:v=>v.trim().split(/\s+/).filter(Boolean).length>=4,
- age:v=>/^\d+$/.test(v)&&+v>=5&&+v<=100,
+ age:v=>/^\d+$/.test(v)&&+v>=0&&+v<=100,
  marital:v=>!!v, church:v=>!!v, education:v=>!!v,
- nid:v=>/^\d{14}$/.test(v), phone:v=>/^\d{11}$/.test(v),
+ nid:v=>nidInfo(v).ok, phone:v=>/^\d{11}$/.test(v),
  address:v=>v.trim().length>=2
 };
 function paidOk(){return $('paid').checked}
 function validate(){
  let ok=true,first=null;
+ $('e_nid').textContent=nidInfo($('nid').value).msg;
  for(const k in rules){
   const good=rules[k]($(k).value);
   $(k).classList.toggle('bad',!good); $('e_'+k).style.display=good?'none':'block';
@@ -163,16 +186,18 @@ $('f').addEventListener('submit',async e=>{
   phone:$('phone').value,nid:$('nid').value,marital:$('marital').value,church:$('church').value,
   confessor:$('confessor').value.trim(),education:$('education').value,service:$('service').value.trim(),
   email:$('email').value.trim(),paid:'YES',notes:$('notes').value.trim()};
+ const under=+$('age').value<18; rec.confirmU18=under;
+ if(under&&!confirm('⚠️ السن المحسوب من الرقم القومي '+$('age').value+' سنة (أقل من 18).\nراجع مع المسجل — تكمّل التسجيل؟'))return;
  const btn=$('btn');btn.disabled=true;toast('wait','جاري التسجيل...');
  try{
   const res=await send(rec);
-  if(res.ok){toast('ok','تم التسجيل بنجاح ✔ — المدفوعين: '+res.count+' | الإجمالي: '+res.total+' جنيه');$('f').reset();$('diocese').value='الشرقية ومدينة العاشر'}
+  if(res.ok){toast('ok','تم التسجيل بنجاح ✔ — المدفوعين: '+res.count+' | الإجمالي: '+res.total+' جنيه');$('f').reset();$('diocese').value='الشرقية ومدينة العاشر';$('h_age').textContent=''}
   else if(res.auth){localStorage.removeItem(PIN_KEY);showLogin()}
   else toast('err',res.msg||'حصلت مشكلة، حاول تاني');
  }catch(err){
   const q=getQ();q.push(rec);setQ(q);
   toast('wait','مفيش اتصال بالنت - التسجيل اتحفظ على الجهاز وهيتبعت لوحده لما النت يرجع');
-  $('f').reset();$('diocese').value='الشرقية ومدينة العاشر';
+  $('f').reset();$('diocese').value='الشرقية ومدينة العاشر';$('h_age').textContent='';
  }
  btn.disabled=false;
 });
