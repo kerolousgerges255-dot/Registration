@@ -125,7 +125,6 @@ function updateNid(){
 $('nid').addEventListener('input',updateNid);
 const rules={
  name:v=>v.trim().split(/\s+/).filter(Boolean).length>=4,
- age:v=>/^\d+$/.test(v)&&+v>=0&&+v<=100,
  marital:v=>!!v, church:v=>!!v, education:v=>!!v,
  nid:v=>nidInfo(v).ok, phone:v=>/^\d{11}$/.test(v),
  address:v=>v.trim().length>=2
