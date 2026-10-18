@@ -5,22 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>تسجيل معهد في اتشوب - معهد الكتاب المقدس</title>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
-  
-/* تثبيت لون الكتابة داخل جميع الخانات */
-input,
-select,
-textarea {
-  color: #2b1a14 !important;
-  -webkit-text-fill-color: #2b1a14 !important;
-  opacity: 1 !important;
-}
-
-/* الحفاظ على لون خانة السن التلقائية */
-input[readonly] {
-  color: #6b5a50 !important;
-  -webkit-text-fill-color: #6b5a50 !important;
-}
-  
 <style>
 :root{--brown:#6B2412;--orange:#C0622A;--cream:#FBF5EE;--line:#E4D3C2;--ok:#1E7B45;--err:#B3261E}
 *{box-sizing:border-box}
@@ -38,6 +22,10 @@ label .req{color:var(--err)}
 input,select,textarea{width:100%;padding:11px 12px;border:1.5px solid var(--line);border-radius:9px;font:inherit;background:#fff}
 input:focus,select:focus,textarea:focus{outline:none;border-color:var(--orange);box-shadow:0 0 0 3px rgba(192,98,42,.18)}
 input[readonly]{background:#f3ece4;color:#6b5a50}
+/* تثبيت لون الكتابة داخل جميع الخانات */
+input,select,textarea{color:#2b1a14 !important;-webkit-text-fill-color:#2b1a14 !important;opacity:1 !important}
+/* الحفاظ على لون خانة السن التلقائية */
+input[readonly]{color:#6b5a50 !important;-webkit-text-fill-color:#6b5a50 !important}
 .bad{border-color:var(--err)!important}
 .hint{font-size:.8rem;color:#7a665b;margin-top:3px}
 .msgerr{font-size:.8rem;color:var(--err);margin-top:3px;display:none}
